@@ -1,12 +1,12 @@
 {
-  "name": "rest-client",
+  "name": "rest-client-ye",
   "displayName": "REST Client",
   "description": "REST Client for Visual Studio Code",
-  "version": "0.24.6",
-  "publisher": "humao",
+  "version": "0.24.7",
+  "publisher": "luckyye",
   "author": {
-    "name": "Huachao Mao",
-    "email": "huachaomao@gmail.com"
+    "name": "luckyye",
+    "email": "lucky_yjw@163.com"
   },
   "icon": "images/rest_icon.png",
   "galleryBanner": {
@@ -18,10 +18,10 @@
     "url": "https://github.com/Huachao/vscode-restclient/issues",
     "email": "huachaomao@gmail.com"
   },
-  "homepage": "https://github.com/Huachao/vscode-restclient/blob/master/README.md",
+  "homepage": "https://github.com/luckyye/vscode-restclient-ye#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Huachao/vscode-restclient.git"
+    "url": "https://github.com/luckyye/vscode-restclient-ye.git"
   },
   "engines": {
     "vscode": "^1.57.0"
@@ -54,8 +54,7 @@
     "onCommand:rest-client.copy-request-as-curl",
     "onCommand:rest-client.fold-response",
     "onCommand:rest-client.unfold-response",
-    "onLanguage:http",
-    "onLanguage:markdown"
+    "onLanguage:http"
   ],
   "main": "./dist/extension",
   "contributes": {
@@ -650,12 +649,14 @@
     "webpack-cli": "^3.1.0"
   },
   "dependencies": {
+    "@types/crypto-js": "^4.1.1",
     "adal-node": "^0.1.26",
     "applicationinsights": "^1.0.5",
     "aws4": "^1.9.1",
     "code-highlight-linenums": "^0.2.1",
     "combined-stream": "^1.0.5",
     "content-disposition": "^0.5.3",
+    "crypto-js": "^4.1.1",
     "dayjs": "^1.8.20",
     "dotenv": "^8.2.0",
     "encodeurl": "^1.0.1",

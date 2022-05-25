@@ -1,0 +1,10 @@
+diff a/src/utils/httpVariableProviders/environmentVariableProvider.ts b/src/utils/httpVariableProviders/environmentVariableProvider.ts	(rejected hunks)
+@@ -8,6 +8,8 @@ import { HttpVariable, HttpVariableProvider } from './httpVariableProvider';
+ export class EnvironmentVariableProvider implements HttpVariableProvider {
+     private static _instance: EnvironmentVariableProvider;
+ 
++    public _environmentName: string
++
+     private readonly _settings: RestClientSettings = RestClientSettings.Instance;
+ 
+     public static get Instance(): EnvironmentVariableProvider {

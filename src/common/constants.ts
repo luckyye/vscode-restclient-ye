@@ -23,6 +23,8 @@ export const AzureActiveDirectoryVariableName = "$aadToken";
 export const AzureActiveDirectoryDescription = "Prompts to sign in to Azure AD and adds the token to the request";
 export const AzureActiveDirectoryV2TokenVariableName = "$aadV2Token";
 export const AzureActiveDirectoryV2TokenDescription = "Prompts to sign in to Azure AD V2 and adds the token to the request";
+export const CryptoJSVariableName = "$cryptoJS";
+export const CryptoJSDescription = "encrypt string using crypto-js ";
 
 /**
  * NOTE: The client id represents an AAD app people sign in to. The client id is sent to AAD to indicate what app

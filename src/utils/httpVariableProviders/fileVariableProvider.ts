@@ -12,7 +12,7 @@ type FileVariableValue = Record<'name' | 'value', string>;
 
 export class FileVariableProvider implements HttpVariableProvider {
     private static _instance: FileVariableProvider;
-
+    public _environmentName: string
     public static get Instance(): FileVariableProvider {
         if (!this._instance) {
             this._instance = new FileVariableProvider();
@@ -150,6 +150,21 @@ export class FileVariableProvider implements HttpVariableProvider {
             });
         }
 
+        // 嵌套系统变量里嵌套的变量
+        for (const [name, value] of variableMap) {
+            let newValue = await this.processNonFileVariableValue(document, value, fileVariableNames)
+            let match: RegExpExecArray | null;
+            if(match = /```js\s+(.*)```/.exec(newValue)){
+                const express = match[1]
+                try {
+                    newValue = eval(express.trim())
+                } catch (error) {
+                    // window.showErrorMessage("invalid js expression: ", express.trim())
+                }
+            }
+            variableMap.set(name, newValue)
+        }
+
         return variableMap;
     }
 
@@ -185,11 +200,13 @@ export class FileVariableProvider implements HttpVariableProvider {
     }
 
     private resolveDependentFileVariableNames(value: string): string[] {
-        const variableReferenceRegex = /\{{2}(.+?)\}{2}/g;
-        let match: RegExpExecArray | null;
         const result: string[] = [];
-        while (match = variableReferenceRegex.exec(value)) {
-            result.push(match[1].trim());
+        for (let v of value.split(/(?:\{{2}|\}{2})/)) {
+            v = v.trim()
+            if (v === "") {
+                continue
+            }
+            result.push(v.trim());
         }
         return result;
     }

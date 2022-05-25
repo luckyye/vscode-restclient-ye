@@ -23,6 +23,10 @@ REST Client allows you to send HTTP request and view the response in Visual Stud
     - Microsoft Identity Platform
     - AWS Signature v4
 * Environments and custom/system variables support
+    - js expression variables, exapmle:
+      ```http
+       @tif_signature = ```js "{{ $cryptoJS SHA256 {{YourVariable}} }}".toUpperCase()```
+       ```
     - Use variables in any place of request(_URL_, _Headers_, _Body_)
     - Support __environment__, __file__, __request__ and __prompt__ custom variables
     - Interactively assign __prompt__ custom variables per request
@@ -39,6 +43,7 @@ REST Client allows you to send HTTP request and view the response in Visual Stud
       + `{{$processEnv [%]envVarName}}`
       + `{{$dotenv [%]variableName}}`
       + `{{$aadToken [new] [public|cn|de|us|ppe] [<domain|tenantId>] [aud:<domain|tenantId>]}}`
+      + `{{$cryptoJS [MD5|SHA256|SHA512|...] [yourPlainString]}}`
     - Easily create/update/delete environments and environment variables in setting file
     - File variables can reference both custom and system variables
     - Support environment switch

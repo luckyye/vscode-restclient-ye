@@ -12,11 +12,15 @@ export class HttpDocumentSymbolProvider implements DocumentSymbolProvider {
         const lines: string[] = document.getText().split(Constants.LineSplitterRegex);
         const requestRange: [number, number][] = Selector.getRequestRanges(
             lines,
-            { ignoreCommentLine: false , ignoreFileVariableDefinitionLine: false });
+            { ignoreCommentLine: false, ignoreFileVariableDefinitionLine: false });
 
         for (let [blockStart, blockEnd] of requestRange) {
             // get real start for current requestRange
             let requestName: string | undefined;
+            if (blockStart > 0) {
+                let blockHeader = lines[blockStart - 1];
+                requestName = blockHeader.replace(/^###\s+/, '').trim()
+            }
             while (blockStart <= blockEnd) {
                 const line = lines[blockStart];
                 if (Selector.isEmptyLine(line) ||

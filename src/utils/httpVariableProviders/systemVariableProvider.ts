@@ -14,6 +14,8 @@ import { AadV2TokenProvider } from '../aadV2TokenProvider';
 import { HttpClient } from '../httpClient';
 import { EnvironmentVariableProvider } from './environmentVariableProvider';
 import { HttpVariable, HttpVariableContext, HttpVariableProvider } from './httpVariableProvider';
+import CryptoJS from "crypto-js"
+
 
 const uuidv4 = require('uuid/v4');
 
@@ -29,7 +31,8 @@ export class SystemVariableProvider implements HttpVariableProvider {
     private readonly timestampRegex: RegExp = new RegExp(`\\${Constants.TimeStampVariableName}(?:\\s(\\-?\\d+)\\s(y|Q|M|w|d|h|m|s|ms))?`);
     private readonly datetimeRegex: RegExp = new RegExp(`\\${Constants.DateTimeVariableName}\\s(rfc1123|iso8601|\'.+\'|\".+\")(?:\\s(\\-?\\d+)\\s(y|Q|M|w|d|h|m|s|ms))?`);
     private readonly localDatetimeRegex: RegExp = new RegExp(`\\${Constants.LocalDateTimeVariableName}\\s(rfc1123|iso8601|\'.+\'|\".+\")(?:\\s(\\-?\\d+)\\s(y|Q|M|w|d|h|m|s|ms))?`);
-    private readonly randomIntegerRegex: RegExp = new RegExp(`\\${Constants.RandomIntVariableName}\\s(\\-?\\d+)\\s(\\-?\\d+)`);
+    private readonly randomIntegerRegex: RegExp = new RegExp(`\\${Constants.RandomIntVariableName}\\s(\\-?\\d+)\\s+(\\-?\\d+)`);
+    private readonly cryptoJSRegex: RegExp = new RegExp(`\\${Constants.CryptoJSVariableName}\\s+(MD5|SHA1|SHA3|SHA256|SHA512|)\\s+(\\w+)`);
     private readonly processEnvRegex: RegExp = new RegExp(`\\${Constants.ProcessEnvVariableName}\\s(\\%)?(\\w+)`);
 
     private readonly dotenvRegex: RegExp = new RegExp(`\\${Constants.DotenvVariableName}\\s(\\%)?([\\w-.]+)`);
@@ -38,8 +41,9 @@ export class SystemVariableProvider implements HttpVariableProvider {
 
     private readonly aadRegex: RegExp = new RegExp(`\\s*\\${Constants.AzureActiveDirectoryVariableName}(\\s+(${Constants.AzureActiveDirectoryForceNewOption}))?(\\s+(ppe|public|cn|de|us))?(\\s+([^\\.]+\\.[^\\}\\s]+|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}))?(\\s+aud:([^\\.]+\\.[^\\}\\s]+|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}))?\\s*`);
 
-    private readonly innerSettingsEnvironmentVariableProvider: EnvironmentVariableProvider =  EnvironmentVariableProvider.Instance;
+    private readonly innerSettingsEnvironmentVariableProvider: EnvironmentVariableProvider = EnvironmentVariableProvider.Instance;
     private static _instance: SystemVariableProvider;
+    public _environmentName: string
 
     public static get Instance(): SystemVariableProvider {
         if (!this._instance) {
@@ -56,6 +60,7 @@ export class SystemVariableProvider implements HttpVariableProvider {
         this.registerLocalDateTimeVariable();
         this.registerGuidVariable();
         this.registerRandomIntVariable();
+        this.registerCryptoJS();
         this.registerProcessEnvVariable();
         this.registerDotenvVariable();
         this.registerAadTokenVariable();
@@ -165,10 +170,36 @@ export class SystemVariableProvider implements HttpVariableProvider {
             return { warning: ResolveWarningMessage.IncorrectRandomIntegerVariableFormat };
         });
     }
+
+    private registerCryptoJS() {
+        this.resolveFuncs.set(Constants.CryptoJSVariableName, async name => {
+            const groups = this.cryptoJSRegex.exec(name);
+            if (groups !== null && groups.length === 3) {
+                const [, method, message] = groups;
+                switch (method) {
+                    case "MD5":
+                        return { value: CryptoJS.MD5(message).toString(CryptoJS.enc.Hex) }
+                    case "SHA1":
+                        return { value: CryptoJS.SHA1(message).toString(CryptoJS.enc.Hex) }
+                    case "SHA3":
+                        return { value: CryptoJS.SHA3(message).toString(CryptoJS.enc.Hex) }
+                    case "SHA256":
+                        return { value: CryptoJS.SHA256(message).toString(CryptoJS.enc.Hex) }
+                    case "SHA512":
+                        return { value: CryptoJS.SHA512(message).toString(CryptoJS.enc.Hex) }
+                    default:
+                        break;
+                }
+            }
+
+            return { warning: ResolveWarningMessage.IncorrectRandomIntegerVariableFormat };
+        });
+    }
+
     private registerProcessEnvVariable() {
         this.resolveFuncs.set(Constants.ProcessEnvVariableName, async name => {
             const groups = this.processEnvRegex.exec(name);
-            if (groups !== null && groups.length === 3 ) {
+            if (groups !== null && groups.length === 3) {
                 const [, refToggle, environmentVarName] = groups;
                 let processEnvName = environmentVarName;
                 if (refToggle !== undefined) {
@@ -253,7 +284,7 @@ export class SystemVariableProvider implements HttpVariableProvider {
                     const tokenString = `${token.tokenType} ${token.accessToken}`;
                     if (copy && tokenString) {
                         // only copy the token to the clipboard if it's the first use (since we tell them we're doing it)
-                       this.clipboard.writeText(tokenString).then(() => resolve({ value: tokenString }));
+                        this.clipboard.writeText(tokenString).then(() => resolve({ value: tokenString }));
                     } else {
                         resolve({ value: tokenString });
                     }
@@ -289,12 +320,12 @@ export class SystemVariableProvider implements HttpVariableProvider {
             async (name) => {
                 const aadV2TokenProvider = new AadV2TokenProvider();
                 const token = await aadV2TokenProvider.acquireToken(name);
-                return {value: token};
+                return { value: token };
             });
     }
     private async resolveSettingsEnvironmentVariable(name: string) {
         if (await this.innerSettingsEnvironmentVariableProvider.has(name)) {
-            const { value, error, warning } =  await this.innerSettingsEnvironmentVariableProvider.get(name);
+            const { value, error, warning } = await this.innerSettingsEnvironmentVariableProvider.get(name);
             if (!error && !warning) {
                 return value!.toString();
             } else {
